@@ -6,24 +6,28 @@ const QA = new Schema({
   results: [
     {
     question_id: Number,
-    question_body: String,
-    question_date: Date,
+    product_id: Number,
+    body: String,
+    date_written: Date,
     asker_name: String,
-    question_helpfulness: Number,
+    asker_email: String,
     reported: Boolean,
+    question_helpfulness: Number,
     answers: {
       {
         answer_id: Number,
         body: String,
-        date: Date,
+        date_written: Date,
         answerer_name: String,
+        answerer_email: String,
+        reported: Boolean,
         helpfulness: Number,
-        photos: {
+        photos: [
           {
-            id: Number, //tinyint/smallint?
+            photo_id: Number,
             url: String,
           },
-        },
+        ],
       }
     }
   }
