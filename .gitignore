@@ -105,3 +105,6 @@ dist
 
 #raw csv data
 data/
+
+#config
+db/config.js

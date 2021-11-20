@@ -1,0 +1,23 @@
+{
+  "name": "sdc",
+  "version": "1.0.0",
+  "description": "An API endpoint for the Questions and Answers module of the Loungeo website.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MKT-Servers/Loungeo-QA-API.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MKT-Servers/Loungeo-QA-API/issues"
+  },
+  "homepage": "https://github.com/MKT-Servers/Loungeo-QA-API#readme",
+  "dependencies": {
+    "pg": "^8.7.1"
+  }
+}
