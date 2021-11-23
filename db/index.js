@@ -25,4 +25,3 @@ module.exports = {
 // use json_agg
 
 //select answer_id, body, to_timestamp(date_written/1000)::timestamp, answerer_name, helpfulness from answers where question_id = 1;
-module.exports.getClient();
