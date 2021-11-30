@@ -78,7 +78,10 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
 app.post('/qa/questions', (req, res) => {
   const { body, name, email, product_id } = req.body;
   db.query('insert into questions(product_id, question_body, question_date, asker_name, asker_email, reported, question_helpfulness) values ($1, $2, $3, $4, $5, false, 0)', [product_id, body, Date.now(),name, email])
-    .then(res.sendStatus(200))
+    .then(data => {
+      console.log(data.rows);
+      res.sendStatus(200)
+    })
     .catch(err => {
       console.log(err);
       res.sendStatus(400);
@@ -100,8 +103,8 @@ app.post('/qa/questions/:question_id/answers', (req, res) => {
 app.put('/qa/questions/:question_id/helpful', (req, res) => {
   const { question_id } = req.params;
   db.query('update questions set question_helpfulness = question_helpfulness + 1 where question_id = $1', [ question_id ])
-    .then(res.sendStatus(200))
-    .catch(res.sendStatus(400))
+    .then(data => res.sendStatus(200))
+    .catch(err => res.sendStatus(400))
 })
 
 // Report Question
@@ -109,8 +112,8 @@ app.put('/qa/questions/:question_id/report', (req, res) => {
   const { question_id } = req.params;
 
   db.query('update questions set reported = true where question_id = $1', [ question_id ])
-  .then(res.sendStaus(200))
-  .catch(res.sendStatus(400))
+  .then(data => res.sendStaus(200))
+  .catch(err => res.sendStatus(400))
 })
 
 //Mark Answer as helpful
@@ -118,8 +121,8 @@ app.put('/qa/answers/:answer_id/helpul', (req, res) => {
   const { answer_id } = req.params;
 
   db.query('update answers set helpfulness = helpfulness + 1 where answer_id = $1', [ answer_id ])
-  .then(res.sendStatus(200))
-  .catch(res.sendStatus(400))
+  .then(data => res.sendStatus(200))
+  .catch(err => res.sendStatus(400))
 })
 
 
@@ -128,8 +131,8 @@ app.put('/qa/answers/:answer_id/report', (req, res) => {
   const { answer_id } = req.params;
 
   db.query('update answers set reported = true where answer_id = $1', [ answer_id ])
-    .then(res.sendStatus(200))
-    .catch(res.sendStatus(400))
+    .then(data => res.sendStatus(200))
+    .catch(err => res.sendStatus(400))
 })
 
 app.listen(port, () => {

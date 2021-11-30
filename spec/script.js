@@ -1,8 +1,8 @@
-import http from 'j6/http';
-import { sleep } from k6;
+import http from 'k6/http';
+import { sleep } from 'k6';
 
 export const options = {
-  vus: 10,
+  vus: 80,
   duration: '15s',
   thresholds: {
     http_req_failed: ['rate<0.01'],
@@ -12,20 +12,14 @@ export const options = {
 
 const port = 'localhost:3000';
 
-const prodPayload = {
+const questionPayload = {
   product_id: '61635',
   count: 50,
   page: 1,
 }
 
-const questionPayload = {
-  question_id: '61635',
-  count: 50,
-  page: 1,
-}
-
 const answerPayload = {
-  answer_id: '61635',
+  question_id: '61635',
   count: 50,
   page: 1,
 }
@@ -40,25 +34,35 @@ const params = {
 };
 
 export default function script() {
-  http.get(`http://${port}/qa/questions/?product_id=${testObj.product_id }&count=${testObj.count}`);
-  sleep(1);
-  http.get(`http://${port}/qa/questions/${testObj.product_id }/answers?count=${testObj.count}`);
+  //get question
+  http.get(`http://${port}/qa/questions/?product_id=${questionPayload.product_id}&count=${questionPayload.count}`);
   sleep(1);
 
+  //get answer
+  http.get(`http://${port}/qa/questions/${answerPayload.question_id}/answers?count=${answerPayload.count}`);
+  sleep(1);
+
+  //post question
   http.post(`http://${port}/qa/questions/`, qPayload, params);
   sleep(1);
-  http.post(`http://${port}/qa/questions/${testObj.product_id}/answers`, aPayload, params);
+
+  //post answer
+  http.post(`http://${port}/qa/questions/${answerPayload.question_id}/answers`, aPayload, params);
   sleep(1);
 
-  http.put(`http://${port}/qa/questions/${testObj.product_id}/helpful`);
+  //mark question as helpful
+  http.put(`http://${port}/qa/questions/${questionPayload.product_id}/helpful`);
   sleep(1);
-  http.put(`http://${port}/qa/questions/${testObj.product_id}/report}`)
+  //report question
+  http.put(`http://${port}/qa/questions/${answerPayload.question_id}/report}`)
   sleep(1);
 
-
-  http.put(`http://${port}/qa/answers/${testObj.answer_id}/helpful`);
+  //mark answer as helpful
+  http.put(`http://${port}/qa/answers/${questionPayload.product_id}/helpful`);
   sleep(1);
-  http.put(`http://${port}/qa/answers/${testObj.answer_id}/report`)
+
+  //report answer
+  http.put(`http://${port}/qa/answers/${answerPayload.question_id}/report`)
   sleep(1);
 
 }
