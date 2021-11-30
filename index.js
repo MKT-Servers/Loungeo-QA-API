@@ -22,13 +22,20 @@ app.get('/qa/questions/:id', (req, res) => {
     res.sendStatus(400);
   }
 
-  db.query('select question_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness from questions where product_id = $1 and reported = false', [ id ])
+  const query3 = 'select answer_id, question_body, to_timestamp(date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers from questions left join answers using (question_id) where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
+
+  const query4 = 'select answer_id, question_body, to_timestamp(date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers, json_agg(photos) as photos from questions left join answers using (question_id) left join photos using(answer_id) where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
+  db.query(query4, [ id ])
   .then(data => {
     const result = {
       product_id: id,
       results: data.rows,
     }
     res.send(result);
+  })
+  .catch(err => {
+    console.log(err);
+    res.sendStatus(400);
   })
 
 })
@@ -48,9 +55,23 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
     res.sendStatus(400);
   }
 
-  db.query('select answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness from answers where question_id = $1 and reported = false', [ question_id])
-   .then(data => res.send(data.rows))
-   .catch(err => res.send(err));
+  const query = 'select answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness, json_agg(photos) as photos from answers left join photos using (answer_id) where question_id = $1 and reported = false group by answer_id;';
+
+  db.query(query, [ question_id])
+   .then(data => {
+     const response = {
+       question: question_id,
+       page: page,
+       count: count,
+       results : data.rows,
+     };
+     res.send(response)
+   })
+   .catch(err => {
+    console.log(err);
+    res.send(err);
+
+   });
 })
 
 // Post Question

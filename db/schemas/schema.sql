@@ -44,3 +44,8 @@ CREATE TABLE photos(
   OIDS=FALSE
 );
 
+ALTER TABLE answers
+ADD CONSTRAINT fk_answers_questions FOREIGN KEY (question_id) REFERENCES questions (question_id);
+
+ALTER TABLE answers
+ADD CONSTRAINT fk_photos_answers FOREIGN KEY (answer_id) REFERENCES answers (answer_id);
