@@ -1,10 +1,15 @@
 const express = require('express');
 const db = require('./db');
 const app = express();
+const path = require('path');
 
 const port = 3000;
 app.use(express.json())
 
+//loaderio
+app.get('/loaderio-fd95acf24ba42f3a47504a5ab656e5a7.txt', (req, res) => {
+  res.sendFile('./loaderio.txt', { root: path.join(__dirname) });
+})
 
 // Get Questions
 app.get('/qa/questions/:id', (req, res) => {
@@ -25,10 +30,6 @@ app.get('/qa/questions/:id', (req, res) => {
   const query3 = 'select answer_id, question_body, to_timestamp(date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers from questions left join answers using (question_id) where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
 
   const query4 = 'select question_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers, json_agg(photos) as photos from questions left join answers using (question_id) left join photos using(answer_id) where product_id = $1 and questions.reported = false group by question_id, question_body, asker_name, question_helpfulness;'
-
-  const query5 = 'select * from photos right outer join (select question_id, body, date, answerer_name, helpfulness from answers where ';
-
-  const query6 = 'select * from photos right outer join (select answers.answer_id, question_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness from answers where (reported = false)) as answers on photos.answer_id = answers.answer_id right outer join (select question_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness from questions where (product_id = $1) and (reported = false)) as results on results.question_id = answers.question_id;'
 
   const query7 = 'select answer_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers.answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness, (json_agg(photos) from answers left join (select * from photos) as photos on photos.answer_id = answers.answer_id where questions.question_id = answers.question_id and reported = false group by answers.answer_id)) as answers, where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
 
