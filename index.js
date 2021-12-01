@@ -24,7 +24,14 @@ app.get('/qa/questions/:id', (req, res) => {
 
   const query3 = 'select answer_id, question_body, to_timestamp(date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers from questions left join answers using (question_id) where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
 
-  const query4 = 'select answer_id, question_body, to_timestamp(date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers, json_agg(photos) as photos from questions left join answers using (question_id) left join photos using(answer_id) where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
+  const query4 = 'select question_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers) as answers, json_agg(photos) as photos from questions left join answers using (question_id) left join photos using(answer_id) where product_id = $1 and questions.reported = false group by question_id, question_body, asker_name, question_helpfulness;'
+
+  const query5 = 'select * from photos right outer join (select question_id, body, date, answerer_name, helpfulness from answers where ';
+
+  const query6 = 'select * from photos right outer join (select answers.answer_id, question_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness from answers where (reported = false)) as answers on photos.answer_id = answers.answer_id right outer join (select question_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness from questions where (product_id = $1) and (reported = false)) as results on results.question_id = answers.question_id;'
+
+  const query7 = 'select answer_id, question_body, to_timestamp(question_date/1000)::timestamp, asker_name, question_helpfulness, json_agg(answers.answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness, (json_agg(photos) from answers left join (select * from photos) as photos on photos.answer_id = answers.answer_id where questions.question_id = answers.question_id and reported = false group by answers.answer_id)) as answers, where product_id = $1 and questions.reported = false group by answer_id, question_body, asker_name, question_helpfulness;'
+
   db.query(query4, [ id ])
   .then(data => {
     const result = {
@@ -40,7 +47,7 @@ app.get('/qa/questions/:id', (req, res) => {
 
 })
 
-// Get Answers
+// Get Answers -- avg response time 45ms
 app.get('/qa/questions/:question_id/answers', (req, res) => {
   const { question_id } = req.params;
   const {
@@ -55,9 +62,9 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
     res.sendStatus(400);
   }
 
-  const query = 'select answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness, json_agg(photos) as photos from answers left join photos using (answer_id) where question_id = $1 and reported = false group by answer_id;';
+  const query1 = 'select answers.answer_id, body, to_timestamp(date/1000)::timestamp, answerer_name, helpfulness, json_agg(photos) as photos from answers left join (select * from photos) as photos on photos.answer_id = answers.answer_id where question_id = $1 and reported = false group by answers.answer_id;'
 
-  db.query(query, [ question_id])
+  db.query(query1, [ question_id])
    .then(data => {
      const response = {
        question: question_id,
@@ -94,17 +101,31 @@ app.post('/qa/questions/:question_id/answers', (req, res) => {
   const { body, name, email, photos } = req.body;
   const { question_id } = req.params;
 
-  db.query('insert into answers(question_id, body, date, answerer_name, answerer_email, reported, helpfulness) values($1, $2, select extract(epoch from now()), $3, $4, false, 0)', [question_id, body, name, email, photos])
-  .then(res.sendStatus(200))
-  .catch(err => res.sendStatus(400))
+  const query1 = 'insert into answers(question_id, body, date, answerer_name, answerer_email, reported, helpfulness) values(3519046, \'timmy da best\', select extract(epoch from now()), $3, $4, false, 0)';
+
+  db.query('insert into answers(question_id, body, date, answerer_name, answerer_email, reported, helpfulness) values($1, $2, $3, $4, $5, false, 0)', [question_id, body, Date.now(), name, email])
+  .then(data => {
+    console.log((data));
+    res.sendStatus(200)
+  })
+  .catch(err => {
+    console.log(err);
+    res.sendStatus(400)
+  })
 })
 
 // Mark Question as helpful
 app.put('/qa/questions/:question_id/helpful', (req, res) => {
   const { question_id } = req.params;
   db.query('update questions set question_helpfulness = question_helpfulness + 1 where question_id = $1', [ question_id ])
-    .then(data => res.sendStatus(200))
-    .catch(err => res.sendStatus(400))
+    .then(data => {
+      console.log(data);
+      res.sendStatus(200)
+    })
+    .catch(err => {
+      console.log(err);
+      res.sendStatus(400)
+    })
 })
 
 // Report Question
@@ -112,17 +133,29 @@ app.put('/qa/questions/:question_id/report', (req, res) => {
   const { question_id } = req.params;
 
   db.query('update questions set reported = true where question_id = $1', [ question_id ])
-  .then(data => res.sendStaus(200))
-  .catch(err => res.sendStatus(400))
+  .then(data => {
+    console.log(data);
+    res.sendStatus(200)
+  })
+  .catch(err => {
+    console.log(err);
+    res.sendStatus(400)
+  })
 })
 
 //Mark Answer as helpful
-app.put('/qa/answers/:answer_id/helpul', (req, res) => {
+app.put('/qa/answers/:answer_id/helpful', (req, res) => {
   const { answer_id } = req.params;
-
+  console.log(answer_id);
   db.query('update answers set helpfulness = helpfulness + 1 where answer_id = $1', [ answer_id ])
-  .then(data => res.sendStatus(200))
-  .catch(err => res.sendStatus(400))
+  .then(data => {
+    console.log(data);
+    res.sendStatus(200)
+  })
+  .catch(err => {
+    console.log(err);
+    res.sendStatus(400)
+  })
 })
 
 
@@ -131,8 +164,14 @@ app.put('/qa/answers/:answer_id/report', (req, res) => {
   const { answer_id } = req.params;
 
   db.query('update answers set reported = true where answer_id = $1', [ answer_id ])
-    .then(data => res.sendStatus(200))
-    .catch(err => res.sendStatus(400))
+  .then(data => {
+    console.log(data);
+    res.sendStatus(200)
+  })
+  .catch(err => {
+    console.log(err);
+    res.sendStatus(400)
+  })
 })
 
 app.listen(port, () => {
