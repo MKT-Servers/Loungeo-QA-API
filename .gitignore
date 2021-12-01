@@ -107,4 +107,4 @@ dist
 data/
 
 #config
-db/config.js
+config.js
